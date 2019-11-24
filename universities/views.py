@@ -25,7 +25,8 @@ class UniversityViewSet(viewsets.GenericViewSet):
             ser_params.validated_data.get('second_subject'),
             ser_params.validated_data.get('city'),
         )
-        universities = University.objects.filter(city__name=city)
-        professions = Profession.objects.filter(first_subject=first_sub, second_subject=second_sub, university__in=universities)
+        subjects = (first_sub, second_sub)
+        universities = University.objects.all() if city == 'ALL' else University.objects.filter(city__name=city)
+        professions = Profession.objects.filter(first_subject__in=subjects, second_subject__in=subjects, university__in=universities)
         ser = RetrieveUniversitiesSerializer(professions, many=True)
         return Response(ser.data, status=status.HTTP_200_OK)
