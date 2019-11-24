@@ -3,14 +3,12 @@ from universities.models import (
     City,
     University,
     Profession,
-    Subjects,
 )
 
 my_models = [
     City,
     University,
     Profession,
-    Subjects,
 ]
 
 
