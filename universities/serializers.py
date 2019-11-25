@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from universities.models import University, Profession
+from universities.models import University, Profession, City
 
 
 class RetrieveUniversitiesSerializer(serializers.ModelSerializer):
@@ -18,7 +18,20 @@ class RetrieveUniversitiesSerializer(serializers.ModelSerializer):
         )
 
 
-class QueryParamsSerializer(serializers.Serializer):
+class RequestDataSerializer(serializers.Serializer):
     first_subject = serializers.CharField()
     second_subject = serializers.CharField()
     city = serializers.CharField()
+
+
+class CityAutoCompleteRequestDataSerializer(serializers.Serializer):
+    name = serializers.CharField()
+
+
+class CityAutoCompleteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = (
+            'id',
+            'name',
+        )
