@@ -35,3 +35,49 @@ class CityAutoCompleteSerializer(serializers.ModelSerializer):
             'id',
             'name',
         )
+
+
+class CreateCitySerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = City
+        fields = (
+            'id',
+            'name',
+        )
+
+    def create(self, validated_data):
+        return City.objects.create(**validated_data)
+
+
+class CreateUniversityValidateSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name = serializers.CharField()
+    city_name = serializers.CharField()
+
+
+class CreateUniversitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = University
+        fields = '__all__'
+
+    def create(self, validated_data):
+        return University.objects.create(**validated_data)
+
+
+class CreateProfessionValidateSerializer(serializers.Serializer):
+    code = serializers.CharField()
+    name = serializers.CharField()
+    university_code = serializers.CharField()
+    first_subject = serializers.CharField()
+    second_subject = serializers.CharField()
+
+
+class CreateProfessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profession
+        fields = '__all__'
+
+    def create(self, validated_data):
+        return Profession.objects.create(**validated_data)

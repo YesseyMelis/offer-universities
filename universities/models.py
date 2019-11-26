@@ -14,7 +14,7 @@ class City(models.Model):
 
 
 class University(models.Model):
-    code = models.IntegerField()
+    code = models.CharField(max_length=191)
     name = models.CharField(max_length=191)
     city = models.ForeignKey(City, on_delete=None, related_name='universities')
     created_at = models.DateTimeField(blank=True, null=True, auto_now_add=True)

@@ -5,7 +5,8 @@ from rest_framework.response import Response
 
 from universities.models import University, Profession, City
 from universities.serializers import RequestDataSerializer, RetrieveUniversitiesSerializer, \
-    CityAutoCompleteRequestDataSerializer, CityAutoCompleteSerializer
+    CityAutoCompleteRequestDataSerializer, CityAutoCompleteSerializer, CreateCitySerializer, CreateUniversitySerializer, \
+    CreateProfessionSerializer, CreateUniversityValidateSerializer, CreateProfessionValidateSerializer
 
 
 class UniversityViewSet(viewsets.GenericViewSet):
@@ -45,3 +46,75 @@ class UniversityViewSet(viewsets.GenericViewSet):
         city = City.objects.filter(name__icontains=name).all()
         ser = CityAutoCompleteSerializer(city, many=True)
         return Response(ser.data, status=status.HTTP_200_OK)
+
+    @action(
+        methods=['post'],
+        detail=False,
+        url_name='city/add',
+        url_path='city/add',
+    )
+    def city_add(self, request):
+        ser = CreateCitySerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        ser.save()
+        return Response(ser.data, status=status.HTTP_200_OK)
+
+    @action(
+        methods=['post'],
+        detail=False,
+        url_name='university/add',
+        url_path='university/add',
+    )
+    def university_add(self, request):
+        ser_valid = CreateUniversityValidateSerializer(data=request.data)
+        ser_valid.is_valid(raise_exception=True)
+        code, name, city = (
+            ser_valid.validated_data.get('code'),
+            ser_valid.validated_data.get('name'),
+            ser_valid.validated_data.get('city_name'),
+        )
+        print(city)
+        if City.objects.filter(name=city).exists():
+            data = {
+                'code': code,
+                'name': name,
+                'city': City.objects.filter(name=city).first().id
+            }
+            ser = CreateUniversitySerializer(data=data)
+            ser.is_valid(raise_exception=True)
+            ser.save()
+            return Response(ser.data, status=status.HTTP_200_OK)
+        return Response(
+            {'error': 'City not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    @action(
+        methods=['post'],
+        detail=False,
+        url_name='profession/add',
+        url_path='profession/add',
+    )
+    def profession_add(self, request):
+        ser_valid = CreateProfessionValidateSerializer(data=request.data)
+        ser_valid.is_valid(raise_exception=True)
+        code, name, university_code, first, second = (
+            ser_valid.validated_data.get('code'),
+            ser_valid.validated_data.get('name'),
+            ser_valid.validated_data.get('university_code'),
+            ser_valid.validated_data.get('first_subject'),
+            ser_valid.validated_data.get('second_subject'),
+        )
+        if University.objects.filter(code=university_code).exists():
+            data = {
+                'code': code,
+                'name': name,
+                'university': University.objects.filter(code=university_code).first().id,
+                'first_subject': first,
+                'second_subject': second,
+            }
+            ser = CreateProfessionSerializer(data=data)
+            ser.is_valid(raise_exception=True)
+            ser.save()
+            return Response(ser.data, status=status.HTTP_200_OK)
+        return Response({'error': 'University not found'}, status=status.HTTP_404_NOT_FOUND)
