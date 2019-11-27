@@ -73,7 +73,6 @@ class UniversityViewSet(viewsets.GenericViewSet):
             ser_valid.validated_data.get('name'),
             ser_valid.validated_data.get('city_name'),
         )
-        print(city)
         if City.objects.filter(name=city).exists():
             data = {
                 'code': code,
