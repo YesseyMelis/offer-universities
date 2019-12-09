@@ -1,29 +1,59 @@
 from django.utils import timezone
 from rest_framework import serializers
+from django.db.models import Q
 
 from universities.models import University, Profession, City, Speciality
 
 
+class CitySerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = City
+        fields = (
+            'name',
+        )
+
+    def get_name(self, obj):
+        lang = self.context.get('lang')
+        if lang == 'en':
+            return obj.name_en
+        elif lang == 'ru':
+            return obj.name_ru
+        return obj.name_kz
+
+
 class UniversitySerializer(serializers.ModelSerializer):
     city = serializers.CharField(source='city.name', allow_null=True)
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = University
-        fileds = (
+        fields = (
             'name',
             'code',
-            'sity',
             'city',
+            'site',
         )
+
+    def get_name(self, obj):
+        lang = self.context.get('lang')
+        if lang=='en':
+            return obj.name_en
+        elif lang=='ru':
+            return obj.name_ru
+        return obj.name_kz
 
 
 class SpecialitySerializer(serializers.ModelSerializer):
     universities = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
 
     class Meta:
         model = Speciality
         fields = (
             'name',
+            'description',
             'code',
             'total_grant',
             'grant_rus',
@@ -34,12 +64,20 @@ class SpecialitySerializer(serializers.ModelSerializer):
     def get_universities(self, obj):
         specs = Speciality.objects.filter(code=obj.code).values_list('university', flat=True)
         univers = University.objects.filter(id__in=specs)
-        ser = UniversitySerializer(univers, many=True)
+        ser = UniversitySerializer(univers, many=True, context=self.context)
         return ser.data
+
+    def get_name(self, obj):
+        lang = self.context.get('lang')
+        if lang=='en':
+            return obj.name_en
+        elif lang=='ru':
+            return obj.name_ru
+        return obj.name_kz
 
 
 class RecommendationSerializer(serializers.ModelSerializer):
-    profession = serializers.CharField(source='name', allow_null=True)
+    profession = serializers.SerializerMethodField()
     specialities = serializers.SerializerMethodField()
 
     class Meta:
@@ -50,10 +88,18 @@ class RecommendationSerializer(serializers.ModelSerializer):
         )
     
     def get_specialities(self, obj):
-        spec_ids = Profession.objects.filter(name=obj.name).values_list('cpeciality', flat=True)
+        spec_ids = Profession.objects.filter(Q(name_en=obj.name_en) | Q(name_ru=obj.name_en) | Q(name_kz=obj.name_en)).values_list('speciality', flat=True)
         specs = Speciality.objects.filter(id__in=spec_ids)
-        ser = SpecialitySerializer(specs, many=True)
+        ser = SpecialitySerializer(specs, many=True, context=self.context)
         return ser.data
+
+    def get_profession(self, obj):
+        lang = self.context.get('lang')
+        if lang=='en':
+            return obj.name_en
+        elif lang=='ru':
+            return obj.name_ru
+        return obj.name_kz
 
 
 class RequestDataSerializer(serializers.Serializer):
@@ -61,62 +107,8 @@ class RequestDataSerializer(serializers.Serializer):
     second_subject = serializers.CharField()
     city = serializers.CharField()
     score = serializers.IntegerField()
+    interface_lang = serializers.CharField()
 
 
 class CityAutoCompleteRequestDataSerializer(serializers.Serializer):
     name = serializers.CharField()
-
-
-class CitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = City
-        fields = (
-            'id',
-            'name',
-        )
-
-
-class CreateCitySerializer(serializers.ModelSerializer):
-    name = serializers.CharField()
-
-    class Meta:
-        model = City
-        fields = (
-            'id',
-            'name',
-        )
-
-    def create(self, validated_data):
-        return City.objects.create(**validated_data)
-
-
-class CreateUniversityValidateSerializer(serializers.Serializer):
-    code = serializers.CharField()
-    name = serializers.CharField()
-    city_name = serializers.CharField()
-
-
-class CreateUniversitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = University
-        fields = '__all__'
-
-    def create(self, validated_data):
-        return University.objects.create(**validated_data)
-
-
-class CreateProfessionValidateSerializer(serializers.Serializer):
-    code = serializers.CharField()
-    name = serializers.CharField()
-    university_code = serializers.CharField()
-    first_subject = serializers.CharField()
-    second_subject = serializers.CharField()
-
-
-class CreateProfessionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profession
-        fields = '__all__'
-
-    def create(self, validated_data):
-        return Profession.objects.create(**validated_data)
