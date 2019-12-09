@@ -27,10 +27,10 @@ class University(models.Model):
         db_table = 'universities'
 
 
-class Profession(models.Model):
+class Speciality(models.Model):
     code = models.CharField(max_length=191)
     name = models.CharField(max_length=191)
-    university = models.ForeignKey(University, on_delete=None, related_name='professions')
+    university = models.ForeignKey(University, on_delete=None, related_name='specialities')
     first_subject = models.CharField(max_length=191)
     second_subject = models.CharField(max_length=191)
     created_at = models.DateTimeField(blank=True, null=True, auto_now_add=True)
@@ -41,4 +41,12 @@ class Profession(models.Model):
 
     class Meta:
         # managed = False
+        db_table = 'specialities'
+
+
+class Profession(models.Model):
+    name = models.CharField(max_length=191)
+    speciality = models.ForeignKey(Speciality, on_delete=None, related_name='professions')
+
+    class Meta:
         db_table = 'professions'

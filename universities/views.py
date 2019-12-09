@@ -3,9 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from universities.models import University, Profession, City
-from universities.serializers import RequestDataSerializer, RetrieveUniversitiesSerializer, \
-    CityAutoCompleteRequestDataSerializer, CityAutoCompleteSerializer, CreateCitySerializer, CreateUniversitySerializer, \
+from universities.models import University, Profession, City, Speciality
+from universities.serializers import RequestDataSerializer, RecommendationSerializer, \
+    CityAutoCompleteRequestDataSerializer, CitySerializer, CreateCitySerializer, CreateUniversitySerializer, \
     CreateProfessionSerializer, CreateUniversityValidateSerializer, CreateProfessionValidateSerializer
 
 
@@ -22,15 +22,17 @@ class UniversityViewSet(viewsets.GenericViewSet):
     def get_universities(self, request):
         ser_params = RequestDataSerializer(data=request.data)
         ser_params.is_valid(raise_exception=True)
-        first_sub, second_sub, city = (
+        first_sub, second_sub, city, score = (
             ser_params.validated_data.get('first_subject'),
             ser_params.validated_data.get('second_subject'),
             ser_params.validated_data.get('city'),
+            ser_params.validated_data.get('score')
         )
         subjects = (first_sub, second_sub)
         universities = University.objects.all() if city == 'ALL' else University.objects.filter(city__name=city)
-        professions = Profession.objects.filter(first_subject__in=subjects, second_subject__in=subjects, university__in=universities)
-        ser = RetrieveUniversitiesSerializer(professions, many=True)
+        specialities = Speciality.objects.filter(first_subject__in=subjects, second_subject__in=subjects, university__in=universities)
+        professions = Profession.objects.filter(speciality__in = specialities)
+        ser = RecommendationSerializer(professions, many=True)
         return Response(ser.data, status=status.HTTP_200_OK)
 
     @action(
@@ -44,7 +46,18 @@ class UniversityViewSet(viewsets.GenericViewSet):
         ser_params.is_valid(raise_exception=True)
         name = ser_params.validated_data.get('name')
         city = City.objects.filter(name__icontains=name).all()
-        ser = CityAutoCompleteSerializer(city, many=True)
+        ser = CitySerializer(city, many=True)
+        return Response(ser.data, status=status.HTTP_200_OK)
+    
+    @action(
+        methods=['get'],
+        detail=False,
+        url_name='city/list',
+        url_path='city/list',
+    )
+    def city_list(self, request):
+        cities = City.objects.all()
+        ser = CitySerializer(cities, many=True)
         return Response(ser.data, status=status.HTTP_200_OK)
 
     @action(

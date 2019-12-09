@@ -1,34 +1,73 @@
 from django.utils import timezone
 from rest_framework import serializers
 
-from universities.models import University, Profession, City
+from universities.models import University, Profession, City, Speciality
 
 
-class RetrieveUniversitiesSerializer(serializers.ModelSerializer):
-    university_name = serializers.CharField(source='university.name', allow_null=True)
-    city_name = serializers.CharField(source='university.city.name', allow_null=True)
+class UniversitySerializer(serializers.ModelSerializer):
+    city = serializers.CharField(source='city.name', allow_null=True)
+
+    class Meta:
+        model = University
+        fileds = (
+            'name',
+            'code',
+            'sity',
+            'city',
+        )
+
+
+class SpecialitySerializer(serializers.ModelSerializer):
+    universities = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Speciality
+        fields = (
+            'name',
+            'code',
+            'total_grant',
+            'grant_rus',
+            'grant_kaz',
+            'universities',
+        )
+
+    def get_universities(self, obj):
+        specs = Speciality.objects.filter(code=obj.code).values_list('university', flat=True)
+        univers = University.objects.filter(id__in=specs)
+        ser = UniversitySerializer(univers, many=True)
+        return ser.data
+
+
+class RecommendationSerializer(serializers.ModelSerializer):
+    profession = serializers.CharField(source='name', allow_null=True)
+    specialities = serializers.SerializerMethodField()
 
     class Meta:
         model = Profession
         fields = (
-            'code',
-            'name',
-            'university_name',
-            'city_name',
+            'profession',
+            'specialities'
         )
+    
+    def get_specialities(self, obj):
+        spec_ids = Profession.objects.filter(name=obj.name).values_list('cpeciality', flat=True)
+        specs = Speciality.objects.filter(id__in=spec_ids)
+        ser = SpecialitySerializer(specs, many=True)
+        return ser.data
 
 
 class RequestDataSerializer(serializers.Serializer):
     first_subject = serializers.CharField()
     second_subject = serializers.CharField()
     city = serializers.CharField()
+    score = serializers.IntegerField()
 
 
 class CityAutoCompleteRequestDataSerializer(serializers.Serializer):
     name = serializers.CharField()
 
 
-class CityAutoCompleteSerializer(serializers.ModelSerializer):
+class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = (
