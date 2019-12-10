@@ -14,8 +14,9 @@ def parse_city():
     ru_cities = dataRU.get('city')
     kz_cities = dataKZ.get('city')
     for en, ru, kz in zip(en_cities, ru_cities, kz_cities):
-        ru = ru.encode(encoding='utf-8').strip()
-        kz = kz.encode(encoding='utf-8').strip()
+        en = en.strip()
+        ru = ru.strip()
+        kz = kz.strip()
         if not City.objects.filter(name_en=en, name_ru=ru, name_kz=kz).exists():
             City.objects.create(name_en=en, name_ru=ru, name_kz=kz)
 
@@ -27,7 +28,11 @@ def parse_university():
     cities = dataEN.get('city')
     sites = dataEN.get('site')
     for code, en, ru, kz, city, site in zip(codes, en_univer, ru_univer, kz_univer, cities, sites):
-        c = City.objects.filter(name_en=city)
+        en = en.split('"')[1].strip() if '"' in en else en.strip()
+        ru = ru.split('"')[1].strip() if '"' in ru else ru.strip()
+        kz = kz.split('"')[1].strip() if '"' in kz else kz.strip()
+        city = city.strip()
+        c = City.objects.filter(name_en__icontains=city)
         univer = University.objects.filter(code=code, name_en=en, name_ru=ru, name_kz=kz, city__in=c, site=site)
         if not univer.exists():
             University.objects.create(code=code, name_en=en, name_ru=ru, name_kz=kz, city=c.first(), site=site)
@@ -40,8 +45,14 @@ def parse_subjects():
     ru_subject_2 = dataRU.get('subject2')
     kz_subject_2 = dataKZ.get('subject2')
     for en1, ru1, kz1, en2, ru2, kz2 in zip(en_subject_1, ru_subject_1, kz_subject_1, en_subject_2, ru_subject_2, kz_subject_2):
-        sub1 = Subject.objects.filter(name_en=en1, name_ru=ru1, name_kz=kz1)
-        sub2 = Subject.objects.filter(name_en=en2, name_ru=ru2, name_kz=kz2)
+        en1 = en1.strip()
+        ru1 = ru1.strip()
+        kz1 = kz1.strip()
+        en2 = en2.strip()
+        ru2 = ru2.strip()
+        kz2 = kz2.strip()
+        sub1 = Subject.objects.filter(name_en__icontains=en1, name_ru__icontains=ru1, name_kz__icontains=kz1)
+        sub2 = Subject.objects.filter(name_en__icontains=en2, name_ru__icontains=ru2, name_kz__icontains=kz2)
         if not sub1.exists():
             Subject.objects.create(name_en=en1, name_ru=ru1, name_kz=kz1)
         if not sub2.exists():
@@ -77,14 +88,23 @@ def parse_speciality():
             grant_rus,
             grant_kaz
     ):
-        s2 = s2
+        cph = cph.strip()
+        ens = ens.strip()
+        rus = rus.strip()
+        kzs = kzs.strip()
+        end = end.strip()
+        rud = rud.strip()
+        kzd = kzd.strip()
+        uni = uni.split('"')[1].strip() if '"' in uni else uni.strip()
+        s1 = s1.strip()
+        s2 = s2.strip()
         total = int(total)
         grant_ru = int(grus) if type(grus) == int else 0
         grant_kz = int(gkaz) if type(gkaz) == int else 0
 
-        unik = University.objects.filter(name_en=uni)
-        subject1 = Subject.objects.filter(name_en=s1)
-        subject2 = Subject.objects.filter(name_en=s2)
+        unik = University.objects.filter(name_en__icontains=uni)
+        subject1 = Subject.objects.filter(name_en__icontains=s1)
+        subject2 = Subject.objects.filter(name_en__icontains=s2)
         speciality = Speciality.objects.filter(
             code=cph,
             name_en=ens,
@@ -123,6 +143,10 @@ def parse_profession():
     ru_prof = profRU.get('profession')
     kz_prof = profKZ.get('profession')
     for sp, en, ru, kz in zip(en_spec, en_prof, ru_prof, kz_prof):
+        sp = sp.strip()
+        en = en.strip()
+        ru = ru.strip()
+        kz = kz.strip()
         spec = Speciality.objects.filter(name_en__icontains=sp)
         if spec.exists():
             prof = Profession.objects.filter(name_en=en, name_ru=ru, name_kz=kz, speciality__in=spec)

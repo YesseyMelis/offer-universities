@@ -93,9 +93,9 @@ class UniversityViewSet(viewsets.GenericViewSet):
         url_path='subject/list',
     )
     def subject_list(self, request):
-        subjects = Subject.objects.all().values_list('name_en', flat=True)
+        subjects = Subject.objects.all().distinct().values_list('name_en', flat=True)
         if request.query_params.get('interface_lang') == 'ru':
-            subjects = Subject.objects.all().values_list('name_ru', flat=True)
+            subjects = Subject.objects.all().distinct().values_list('name_ru', flat=True)
         elif request.query_params.get('interface_lang') == 'kz':
-            subjects = Subject.objects.all().values_list('name_kz', flat=True)
+            subjects = Subject.objects.all().distinct().values_list('name_kz', flat=True)
         return Response({'data': list(subjects)}, status=status.HTTP_200_OK)
