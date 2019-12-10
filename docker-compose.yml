@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  db:
+  oracle:
     image: postgres
   django:
     build: .
@@ -11,4 +11,4 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - oracle

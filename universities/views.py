@@ -32,7 +32,6 @@ class UniversityViewSet(viewsets.GenericViewSet):
             Q(city__name_en=city) |
             Q(city__name_ru=city) |
             Q(city__name_kz=city))
-        print(universities)
         first_subject = Subject.objects.filter(
             Q(name_en=first_sub) |
             Q(name_ru=first_sub) |
@@ -41,21 +40,19 @@ class UniversityViewSet(viewsets.GenericViewSet):
             Q(name_en=second_sub) |
             Q(name_ru=second_sub) |
             Q(name_kz=second_sub))
-        print('sub')
-        print(first_subject)
         specialities = Speciality.objects.filter(
             Q(first_subject__in=first_subject,
               second_subject__in=second_subject,
+              grant_kaz__lte=score,
+              grant_rus__lte=score,
               university__in=universities) |
             Q(first_subject__in=second_subject,
               second_subject__in=first_subject,
+              grant_kaz__lte=score,
+              grant_rus__lte=score,
               university__in=universities)
         )
-        print('spec')
-        print(specialities)
         professions = Profession.objects.filter(speciality__in=specialities)
-        print('profs')
-        print(professions)
         ser = RecommendationSerializer(professions, many=True, context={'lang': inter_lang})
         return Response(ser.data, status=status.HTTP_200_OK)
 

@@ -3,6 +3,7 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 WORKDIR /code
 COPY requirements.txt /code/
-RUN pip install -r requirements.txt
-RUN pip install xlrd
+RUN pip3 install -r requirements.txt
+RUN pip3 install pandas
+RUN pip3 install xlrd
 COPY . /code/
