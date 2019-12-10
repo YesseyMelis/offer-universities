@@ -48,6 +48,7 @@ class UniversitySerializer(serializers.ModelSerializer):
 class SpecialitySerializer(serializers.ModelSerializer):
     universities = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
 
     class Meta:
         model = Speciality
@@ -67,11 +68,19 @@ class SpecialitySerializer(serializers.ModelSerializer):
         ser = UniversitySerializer(univers, many=True, context=self.context)
         return ser.data
 
+    def get_description(self, obj):
+        lang = self.context.get('lang')
+        if lang == 'en':
+            return obj.description_en
+        if lang == 'ru':
+            return obj.description_ru
+        return obj.description_kz
+
     def get_name(self, obj):
         lang = self.context.get('lang')
-        if lang=='en':
+        if lang == 'en':
             return obj.name_en
-        elif lang=='ru':
+        elif lang == 'ru':
             return obj.name_ru
         return obj.name_kz
 
@@ -95,9 +104,9 @@ class RecommendationSerializer(serializers.ModelSerializer):
 
     def get_profession(self, obj):
         lang = self.context.get('lang')
-        if lang=='en':
+        if lang == 'en':
             return obj.name_en
-        elif lang=='ru':
+        elif lang == 'ru':
             return obj.name_ru
         return obj.name_kz
 

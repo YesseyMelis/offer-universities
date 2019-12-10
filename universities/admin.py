@@ -4,6 +4,7 @@ from universities.models import (
     University,
     Profession,
     Speciality,
+    Subject
 )
 
 my_models = [
@@ -11,6 +12,7 @@ my_models = [
     University,
     Profession,
     Speciality,
+    Subject
 ]
 
 
