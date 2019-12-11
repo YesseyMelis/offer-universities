@@ -24,7 +24,7 @@ class CitySerializer(serializers.ModelSerializer):
 
 
 class UniversitySerializer(serializers.ModelSerializer):
-    city = serializers.CharField(source='city.name', allow_null=True)
+    city = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
 
     class Meta:
@@ -35,6 +35,16 @@ class UniversitySerializer(serializers.ModelSerializer):
             'city',
             'site',
         )
+
+    def get_city(self, obj):
+        univers = University.objects.filter(code=obj.code).values_list('city', flat=True)
+        city = City.objects.filter(id__in=univers).first()
+        lang = self.context.get('lang')
+        if lang == 'en':
+            return city.name_en
+        elif lang == 'ru':
+            return city.name_ru
+        return city.name_kz
 
     def get_name(self, obj):
         lang = self.context.get('lang')
@@ -63,8 +73,13 @@ class SpecialitySerializer(serializers.ModelSerializer):
         )
 
     def get_universities(self, obj):
+        city = self.context.get('city')
         specs = Speciality.objects.filter(code=obj.code).values_list('university', flat=True)
-        univers = University.objects.filter(id__in=specs)
+        univers = University.objects.filter(id__in=specs) if city == 'ALL' else University.objects.filter(
+            Q(id__in=specs, city__name_en=city) |
+            Q(id__in=specs, city__name_ru=city) |
+            Q(id__in=specs, city__name_kz=city)
+        )
         ser = UniversitySerializer(univers, many=True, context=self.context)
         return ser.data
 
@@ -97,7 +112,7 @@ class RecommendationSerializer(serializers.ModelSerializer):
         )
     
     def get_specialities(self, obj):
-        spec_ids = Profession.objects.filter(Q(name_en=obj.name_en) | Q(name_ru=obj.name_en) | Q(name_kz=obj.name_en)).values_list('speciality', flat=True)
+        spec_ids = Profession.objects.filter(Q(name_en=obj.name_en) | Q(name_ru=obj.name_ru) | Q(name_kz=obj.name_kz)).values_list('speciality', flat=True)
         specs = Speciality.objects.filter(id__in=spec_ids)
         ser = SpecialitySerializer(specs, many=True, context=self.context)
         return ser.data

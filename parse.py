@@ -33,7 +33,7 @@ def parse_university():
         kz = kz.split('"')[1].strip() if '"' in kz else kz.strip()
         city = city.strip()
         c = City.objects.filter(name_en__icontains=city)
-        univer = University.objects.filter(code=code, name_en=en, name_ru=ru, name_kz=kz, city__in=c, site=site)
+        univer = University.objects.filter(code=code, name_en__icontains=en, name_ru__icontains=ru, name_kz__icontains=kz, city__in=c, site=site)
         if not univer.exists():
             University.objects.create(code=code, name_en=en, name_ru=ru, name_kz=kz, city=c.first(), site=site)
 
@@ -149,6 +149,6 @@ def parse_profession():
         kz = kz.strip()
         spec = Speciality.objects.filter(name_en__icontains=sp)
         if spec.exists():
-            prof = Profession.objects.filter(name_en=en, name_ru=ru, name_kz=kz, speciality__in=spec)
+            prof = Profession.objects.filter(name_en__icontains=en, name_ru__icontains=ru, name_kz__icontains=kz, speciality__in=spec)
             if not prof.exists():
                 Profession.objects.create(name_en=en, name_ru=ru, name_kz=kz, speciality=spec.first())

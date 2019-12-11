@@ -1,8 +1,10 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.db.models import Q
+from django.core.paginator import Paginator
 
 from universities.models import University, Profession, City, Speciality, Subject
 from universities.serializers import RequestDataSerializer, RecommendationSerializer, \
@@ -28,10 +30,12 @@ class UniversityViewSet(viewsets.GenericViewSet):
             ser_params.validated_data.get('score'),
             ser_params.validated_data.get('interface_lang')
         )
-        universities = University.objects.all() if city == 'ALL' else University.objects.filter(
-            Q(city__name_en=city) |
-            Q(city__name_ru=city) |
-            Q(city__name_kz=city))
+        cities = City.objects.all() if city == 'ALL' else City.objects.filter(
+            Q(name_en=city) |
+            Q(name_ru=city) |
+            Q(name_kz=city)
+        )
+        universities = University.objects.filter(city__in=cities)
         first_subject = Subject.objects.filter(
             Q(name_en=first_sub) |
             Q(name_ru=first_sub) |
@@ -51,10 +55,13 @@ class UniversityViewSet(viewsets.GenericViewSet):
               grant_kaz__lte=score,
               grant_rus__lte=score,
               university__in=universities)
-        )
-        professions = Profession.objects.filter(speciality__in=specialities)
-        ser = RecommendationSerializer(professions, many=True, context={'lang': inter_lang})
-        return Response(ser.data, status=status.HTTP_200_OK)
+        ).values_list('name_en', flat=True)
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        profs = Profession.objects.filter(speciality__name_en__in=specialities)
+        result_page = paginator.paginate_queryset(profs, request)
+        ser = RecommendationSerializer(result_page, many=True, context={'lang': inter_lang, 'city': city})
+        return paginator.get_paginated_response(ser.data)
 
     @action(
         methods=['get'],
