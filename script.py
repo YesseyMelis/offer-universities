@@ -65,7 +65,6 @@ def get_list(x):
         if len(names) > 3:
             names = names[:3]
         return names
-
     #Return empty list in case of missing/malformed data
     return []
 
