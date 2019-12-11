@@ -2,7 +2,7 @@ version: '3'
 
 services:
   oracle:
-    image: postgres
+    image: oracle/instantclient11.2
   django:
     build: .
     command: gunicorn offer_universities.wsgi:application --bind 0.0.0.0:8000

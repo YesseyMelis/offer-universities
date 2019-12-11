@@ -78,9 +78,9 @@ WSGI_APPLICATION = 'offer_universities.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
+        'ENGINE': 'django.db.backends.oracle',
+        'NAME': 'oracle',
+        'USER': 'oracle',
         'HOST': 'oracle',
         'PORT': 5432,
     }
